@@ -1,0 +1,45 @@
+<% include('layout') %>
+
+<section>
+  <input
+    type="text"
+    id="searchInput"
+    placeholder="Search ISOs"
+    oninput="filterIsos()"
+  />
+  <button onclick="reloadIsos()">Reload</button>
+</section>
+<ul id="isoList">
+  <% isos.forEach(iso => { %>
+  <li>
+    <h2><%= iso.name %></h2>
+    <p><strong>Version:</strong> <%= iso.version %></p>
+    <p><strong>Description:</strong> <%= iso.description %></p>
+    <p><strong>Uploader:</strong> <%= iso.uploader %></p>
+    <a href="<%= iso.filePath %>" download>Download ISO</a>
+  </li>
+  <% }) %>
+</ul>
+
+<script>
+  function filterIsos() {
+    const input = document.getElementById("searchInput");
+    const filter = input.value.toLowerCase();
+    const list = document.getElementById("isoList");
+    const items = list.getElementsByTagName("li");
+
+    for (let i = 0; i < items.length; i++) {
+      const name = items[i].getElementsByTagName("h2")[0];
+      if (name) {
+        const txtValue = name.textContent || name.innerText;
+        items[i].style.display = txtValue.toLowerCase().includes(filter)
+          ? ""
+          : "none";
+      }
+    }
+  }
+
+  function reloadIsos() {
+    location.reload();
+  }
+</script>
