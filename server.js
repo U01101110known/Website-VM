@@ -18,14 +18,12 @@ app.use(express.urlencoded({ extended: true }));
 // Set up multer with temporary storage
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    // Create a temporary directory for storing the file
     tmp.dir({ keep: true }, (err, directory) => {
       if (err) return cb(err);
       cb(null, directory);
     });
   },
   filename: function (req, file, cb) {
-    // Keep original file name
     cb(null, file.originalname);
   },
 });
@@ -69,53 +67,27 @@ app.get("/list", (req, res) => {
 
   readDirSync(uploadsDir);
 
-  res.render("list", {
-    title: "List of Uploaded ISOs",
-    body: `<section>
-            <input type="text" id="searchInput" placeholder="Search ISOs" oninput="filterIsos()">
-            <button onclick="reloadIsos()">Reload</button>
-        </section>
-        <ul id="isoList">
-            ${isos
-              .map(
-                (iso) => `
-                <li>
-                    <h2>${iso.name}</h2>
-                    <p><strong>Version:</strong> ${iso.version}</p>
-                    <p><strong>Description:</strong> ${iso.description}</p>
-                    <p><strong>Uploader:</strong> ${iso.uploader}</p>
-                    <a href="${iso.filePath}" download>Download ISO</a>
-                </li>
-            `
-              )
-              .join("")}
-        </ul>`,
-  });
+  res.render("list", { isos: isos });
 });
 
 // Handle file upload
 app.post("/upload", upload.single("isoFile"), (req, res) => {
-  // Retrieve and trim the OS name and version from the form
   const osName = req.body.osName ? req.body.osName.trim() : "unknown";
   const osVersion = req.body.osVersion ? req.body.osVersion.trim() : "none";
   const description = req.body.description ? req.body.description.trim() : "";
   const uploader = req.body.uploader ? req.body.uploader.trim() : "unknown";
 
-  // Define paths
   const baseDir = path.join(__dirname, "uploads", osName, osVersion);
   const metadataFilePath = path.join(baseDir, "metadata.json");
 
-  // Ensure directory exists
   if (!fs.existsSync(baseDir)) {
     fs.mkdirSync(baseDir, { recursive: true });
   }
 
-  // Move file from temp directory to final destination
   const tempFilePath = req.file.path;
   const finalFilePath = path.join(baseDir, req.file.originalname);
   fs.renameSync(tempFilePath, finalFilePath);
 
-  // Save metadata in JSON file
   const metadata = {
     osName: osName,
     osVersion: osVersion,
