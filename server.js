@@ -57,7 +57,7 @@ app.get("/list", (req, res) => {
               version: metadata.osVersion,
               description: metadata.description,
               uploader: metadata.uploader,
-              filePath: metadata.filePath,
+              filePath: metadata.filePath.replace(__dirname, ""), // Adjust the file path for client-side access
             });
           }
         });
@@ -69,47 +69,7 @@ app.get("/list", (req, res) => {
 
   res.render("list", {
     title: "List of Uploaded ISOs",
-    body: `
-            <section>
-                <input type="text" id="searchInput" placeholder="Search ISOs" oninput="filterIsos()" />
-                <button onclick="reloadIsos()">Reload</button>
-            </section>
-            <ul id="isoList">
-                ${isos
-                  .map(
-                    (iso) => `
-                    <li>
-                        <h2>${iso.name}</h2>
-                        <p><strong>Version:</strong> ${iso.version}</p>
-                        <p><strong>Description:</strong> ${iso.description}</p>
-                        <p><strong>Uploader:</strong> ${iso.uploader}</p>
-                        <a href="${iso.filePath}" download>Download ISO</a>
-                    </li>
-                `
-                  )
-                  .join("")}
-            </ul>
-            <script>
-                function filterIsos() {
-                    const input = document.getElementById("searchInput");
-                    const filter = input.value.toLowerCase();
-                    const list = document.getElementById("isoList");
-                    const items = list.getElementsByTagName("li");
-
-                    for (let i = 0; i < items.length; i++) {
-                        const name = items[i].getElementsByTagName("h2")[0];
-                        if (name) {
-                            const txtValue = name.textContent || name.innerText;
-                            items[i].style.display = txtValue.toLowerCase().includes(filter) ? "" : "none";
-                        }
-                    }
-                }
-
-                function reloadIsos() {
-                    location.reload();
-                }
-            </script>
-        `,
+    isos: isos, // Pass the `isos` array to the EJS template
   });
 });
 
@@ -120,7 +80,12 @@ app.post("/upload", upload.single("isoFile"), (req, res) => {
   const description = req.body.description ? req.body.description.trim() : "";
   const uploader = req.body.uploader ? req.body.uploader.trim() : "unknown";
 
-  const baseDir = path.join(__dirname, "uploads", osName, osVersion);
+  const baseDir = path.join(
+    __dirname,
+    "uploads",
+    osName,
+    osVersion === "none" ? "none" : osVersion
+  );
   const metadataFilePath = path.join(baseDir, "metadata.json");
 
   if (!fs.existsSync(baseDir)) {
@@ -136,7 +101,7 @@ app.post("/upload", upload.single("isoFile"), (req, res) => {
     osVersion: osVersion,
     description: description,
     uploader: uploader,
-    filePath: finalFilePath,
+    filePath: finalFilePath, // Store the file path for the metadata
   };
 
   fs.writeFileSync(metadataFilePath, JSON.stringify(metadata, null, 2), "utf8");

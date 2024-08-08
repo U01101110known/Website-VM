@@ -1,4 +1,4 @@
-<% include('layout') %> <% include('index') %>
+<!-- views/list.ejs -->
 <section>
   <input
     type="text"
@@ -15,7 +15,7 @@
     <p><strong>Version:</strong> <%= iso.version %></p>
     <p><strong>Description:</strong> <%= iso.description %></p>
     <p><strong>Uploader:</strong> <%= iso.uploader %></p>
-    <a href="<%= iso.filePath %>" download>Download ISO</a>
+    <a href="/uploads/<%= iso.filePath %>" download>Download ISO</a>
   </li>
   <% }) %>
 </ul>
